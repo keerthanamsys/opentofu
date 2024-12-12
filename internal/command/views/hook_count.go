@@ -23,6 +23,7 @@ type countHook struct {
 	Changed  int
 	Removed  int
 	Imported int
+	Forgotten int
 
 	ToAdd          int
 	ToChange       int
@@ -46,6 +47,7 @@ func (h *countHook) Reset() {
 	h.Changed = 0
 	h.Removed = 0
 	h.Imported = 0
+	h.Forgotten = 0
 }
 
 func (h *countHook) PreApply(addr addrs.AbsResourceInstance, gen states.Generation, action plans.Action, priorState, plannedNewState cty.Value) (tofu.HookAction, error) {
@@ -81,6 +83,8 @@ func (h *countHook) PostApply(addr addrs.AbsResourceInstance, gen states.Generat
 					h.Removed++
 				case plans.Update:
 					h.Changed++
+				case plans.Forget: 
+					h.Forgotten++
 				}
 			}
 		}
@@ -107,6 +111,8 @@ func (h *countHook) PostDiff(addr addrs.AbsResourceInstance, gen states.Generati
 		h.ToRemove += 1
 	case plans.Update:
 		h.ToChange += 1
+	case plans.Forget: 
+		h.Forgotten++
 	}
 
 	return tofu.HookActionContinue, nil
