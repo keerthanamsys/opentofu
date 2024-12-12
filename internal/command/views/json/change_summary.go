@@ -45,3 +45,4 @@ func (cs *ChangeSummary) String() string {
         return fmt.Sprintf("%s: %d add, %d change, %d destroy, %d forget", cs.Operation, cs.Add, cs.Change, cs.Remove, cs.Forget)
     }
 }
+
