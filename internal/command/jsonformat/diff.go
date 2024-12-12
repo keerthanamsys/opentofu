@@ -80,7 +80,7 @@ type diffs struct {
 
 func (d diffs) Empty() bool {
 	for _, change := range d.changes {
-		if change.diff.Action != plans.NoOp || change.Moved() {
+		if change.diff.Action != plans.NoOp || change.Moved() || change.Forgetting() {
 			return false
 		}
 	}
@@ -106,3 +106,9 @@ func (d diff) Moved() bool {
 func (d diff) Importing() bool {
 	return d.change.Change.Importing != nil
 }
+
+func (d diff) Forgetting() bool {
+    // Check if the primary action is "Forget"
+    return jsonplan.UnmarshalActions(d.change.Change.Actions) == plans.Forget
+}
+
