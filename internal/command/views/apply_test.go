@@ -108,22 +108,33 @@ func TestApply_resourceCount(t *testing.T) {
 		destroy   bool
 		want      string
 		importing bool
+		forgetting int
 	}{
 		"apply": {
 			false,
 			"Apply complete! Resources: 1 added, 2 changed, 3 destroyed.",
 			false,
+			0,
 		},
 		"destroy": {
 			true,
 			"Destroy complete! Resources: 3 destroyed.",
 			false,
+			0
 		},
 		"import": {
 			false,
 			"Apply complete! Resources: 1 imported, 1 added, 2 changed, 3 destroyed.",
 			true,
+			0
 		},
+		"forget":{
+			false,
+			"Apply complete! Resources: 1 forgotten, 1 added, 2 changed, 3 destroyed.",
+			false
+			1
+		},	
+	
 	}
 
 	// For compatibility reasons, these tests should hold true for both human
@@ -150,6 +161,7 @@ func TestApply_resourceCount(t *testing.T) {
 				count.Added = 1
 				count.Changed = 2
 				count.Removed = 3
+				count.Forgetting = tc.forgetting
 
 				if tc.importing {
 					count.Imported = 1
@@ -241,32 +253,39 @@ func TestApplyHuman_resourceCountStatePath(t *testing.T) {
 // Basic test coverage of Outputs, since most of its functionality is tested
 // elsewhere.
 func TestApplyJSON_outputs(t *testing.T) {
-	streams, done := terminal.StreamsForTesting(t)
-	v := NewApply(arguments.ViewJSON, false, NewView(streams))
+    streams, done := terminal.StreamsForTesting(t)
+    v := NewApply(arguments.ViewJSON, false, NewView(streams))
 
-	v.Outputs(map[string]*states.OutputValue{
-		"boop_count": {Value: cty.NumberIntVal(92)},
-		"password":   {Value: cty.StringVal("horse-battery").Mark(marks.Sensitive), Sensitive: true},
-	})
+    v.Outputs(map[string]*states.OutputValue{
+        "boop_count": {Value: cty.NumberIntVal(92)},
+        "password":   {Value: cty.StringVal("horse-battery").Mark(marks.Sensitive), Sensitive: true},
+    })
 
-	want := []map[string]interface{}{
-		{
-			"@level":   "info",
-			"@message": "Outputs: 2",
-			"@module":  "tofu.ui",
-			"type":     "outputs",
-			"outputs": map[string]interface{}{
-				"boop_count": map[string]interface{}{
-					"sensitive": false,
-					"value":     float64(92),
-					"type":      "number",
-				},
-				"password": map[string]interface{}{
-					"sensitive": true,
-					"type":      "string",
-				},
-			},
-		},
-	}
-	testJSONViewOutputEquals(t, done(t).Stdout(), want)
+    want := []map[string]interface{}{
+        {
+            "@level":   "info",
+            "@message": "Outputs: 2",
+            "@module":  "tofu.ui",
+            "type":     "outputs",
+            "outputs": map[string]interface{}{
+                "boop_count": map[string]interface{}{
+                    "sensitive": false,
+                    "value":     float64(92),
+                    "type":      "number",
+                },
+                "password": map[string]interface{}{
+                    "sensitive": true,
+                    "type":      "string",
+                },
+            },
+            "changes": map[string]int{
+                "added":    1,
+                "changed":  2,
+                "destroyed": 3,
+                "forgotten": 1, // Include forgotten resources in the output
+            },
+        },
+    }
+    testJSONViewOutputEquals(t, done(t).Stdout(), want)
 }
+
