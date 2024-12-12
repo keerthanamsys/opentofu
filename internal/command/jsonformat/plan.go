@@ -24,6 +24,12 @@ import (
 const (
 	detectedDrift  string = "drift"
 	proposedChange string = "change"
+	Create plans.Action = iota
+        Update
+        Delete
+        Forget // Add this action
+
+	
 )
 
 type Plan struct {
@@ -36,6 +42,9 @@ type Plan struct {
 	ProviderFormatVersion string                            `json:"provider_format_version"`
 	ProviderSchemas       map[string]*jsonprovider.Provider `json:"provider_schemas"`
 }
+
+
+
 
 func (plan Plan) getSchema(change jsonplan.ResourceChange) *jsonprovider.Schema {
 	switch change.Mode {
@@ -64,6 +73,7 @@ func (plan Plan) renderHuman(renderer Renderer, mode plans.Mode, opts ...plans.Q
 	willPrintResourceChanges := false
 	counts := make(map[plans.Action]int)
 	importingCount := 0
+	forgettingCount := 0
 	var changes []diff
 	for _, diff := range diffs.changes {
 		action := jsonplan.UnmarshalActions(diff.change.Change.Actions)
@@ -80,6 +90,10 @@ func (plan Plan) renderHuman(renderer Renderer, mode plans.Mode, opts ...plans.Q
 
 		if diff.Importing() {
 			importingCount++
+		}
+		
+		if diff.Forgetting() {
+			forgettingCount++
 		}
 
 		// Don't count move-only changes
@@ -225,18 +239,30 @@ func (plan Plan) renderHuman(renderer Renderer, mode plans.Mode, opts ...plans.Q
 
 		if importingCount > 0 {
 			renderer.Streams.Printf(
-				renderer.Colorize.Color("\n[bold]Plan:[reset] %d to import, %d to add, %d to change, %d to destroy.\n"),
+				
+				renderer.Colorize.Color("\n[bold][green]Apply complete![reset] Resources: %d imported, %d forgotten, %d added, %d changed, %d destroyed.\n"),
 				importingCount,
+				forgettingCount,
+				counts[plans.Create]+counts[plans.DeleteThenCreate]+counts[plans.CreateThenDelete],
+				counts[plans.Update],
+				counts[plans.Delete]+counts[plans.DeleteThenCreate]+counts[plans.CreateThenDelete])
+		} else if forgettingCount > 0 {
+			renderer.Streams.Printf(
+				
+				renderer.Colorize.Color("\n[bold][green]Apply complete![reset] Resources: %d forgotten, %d added, %d changed, %d destroyed.\n"),
+				forgettingCount,
 				counts[plans.Create]+counts[plans.DeleteThenCreate]+counts[plans.CreateThenDelete],
 				counts[plans.Update],
 				counts[plans.Delete]+counts[plans.DeleteThenCreate]+counts[plans.CreateThenDelete])
 		} else {
 			renderer.Streams.Printf(
-				renderer.Colorize.Color("\n[bold]Plan:[reset] %d to add, %d to change, %d to destroy.\n"),
+				
+				renderer.Colorize.Color("\n[bold][green]Apply complete![reset] Resources: %d added, %d changed, %d destroyed.\n"),
 				counts[plans.Create]+counts[plans.DeleteThenCreate]+counts[plans.CreateThenDelete],
 				counts[plans.Update],
 				counts[plans.Delete]+counts[plans.DeleteThenCreate]+counts[plans.CreateThenDelete])
 		}
+		
 	}
 
 	if len(outputs) > 0 {
