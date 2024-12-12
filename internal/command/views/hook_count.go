@@ -125,3 +125,13 @@ func (h *countHook) PostApplyImport(addr addrs.AbsResourceInstance, importing pl
 	h.Imported++
 	return tofu.HookActionContinue, nil
 }
+func (h *countHook) PostApplyForget(addr addrs.AbsResourceInstance) (tofu.HookAction, error) {
+    h.Lock()
+    defer h.Unlock()
+
+    
+    h.Forgotten++
+
+    return tofu.HookActionContinue, nil
+}
+
