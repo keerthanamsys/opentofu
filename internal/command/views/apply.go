@@ -68,13 +68,14 @@ func (v *ApplyHuman) ResourceCount(stateOutPath string) {
 			v.view.colorize.Color("[reset][bold][green]\nDestroy complete! Resources: %d destroyed.\n"),
 			v.countHook.Removed,
 		)
-	} else if v.countHook.Imported > 0 {
+	} else if v.countHook.Imported > 0 || v.countHook.Forgotten > 0 {
 		v.view.streams.Printf(
-			v.view.colorize.Color("[reset][bold][green]\nApply complete! Resources: %d imported, %d added, %d changed, %d destroyed.\n"),
+			v.view.colorize.Color("[reset][bold][green]\nApply complete! Resources: %d imported, %d added, %d changed, %d destroyed, %d forgotten.\n"),
 			v.countHook.Imported,
 			v.countHook.Added,
 			v.countHook.Changed,
 			v.countHook.Removed,
+			v.countHook.Forgotten,
 		)
 	} else {
 		v.view.streams.Printf(
@@ -82,6 +83,7 @@ func (v *ApplyHuman) ResourceCount(stateOutPath string) {
 			v.countHook.Added,
 			v.countHook.Changed,
 			v.countHook.Removed,
+			v.countHook.Forgotten,
 		)
 	}
 	if (v.countHook.Added > 0 || v.countHook.Changed > 0) && stateOutPath != "" {
@@ -144,6 +146,7 @@ func (v *ApplyJSON) ResourceCount(stateOutPath string) {
 		Change:    v.countHook.Changed,
 		Remove:    v.countHook.Removed,
 		Import:    v.countHook.Imported,
+		Forget:    v.countHook.Forgotten,
 		Operation: operation,
 	})
 }
