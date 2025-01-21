@@ -31,6 +31,13 @@ import (
 	"github.com/opentofu/opentofu/internal/states/statemgr"
 )
 
+// LockInfo represents the lock details stored in DynamoDB
+type LockInfo struct {
+	ID   string `json:"ID"`
+	Info string `json:"Info"`
+}
+
+
 // Store the last saved serial in dynamo with this suffix for consistency checks.
 const (
 	s3EncryptionAlgorithm  = "AES256"
@@ -346,6 +353,48 @@ func (c *RemoteClient) getMD5(ctx context.Context) ([]byte, error) {
 	}
 
 	return sum, nil
+}
+
+// GetLockInfo retrieves the lock information from DynamoDB
+func (c *S3BackendClient) GetLockInfo(ctx context.Context, lockID string) (*LockInfo, error) {
+	input := &dynamodb.GetItemInput{
+		TableName: c.lockTable,
+		Key: map[string]types.AttributeValue{
+			"LockID": &types.AttributeValueMemberS{Value: lockID},
+		},
+	}
+
+	resp, err := c.dynamodbClient.GetItem(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve lock info from DynamoDB: %w", err)
+	}
+
+	// Check if lock info exists
+	if resp.Item == nil || len(resp.Item) == 0 {
+		return nil, fmt.Errorf("error: LockID '%s' does not exist in the DynamoDB table '%s'. "+
+			"Ensure you are using the correct workspace and check the lock table.",
+			lockID, *c.lockTable)
+	}
+
+	// Extract the lock info
+	var lockInfo LockInfo
+	infoData, ok := resp.Item["Info"].(*types.AttributeValueMemberS)
+	if !ok {
+		return nil, errors.New("error: Lock info field is missing in DynamoDB entry. Possible data corruption.")
+	}
+
+	// Unmarshal lock info
+	if err := json.Unmarshal([]byte(infoData.Value), &lockInfo); err != nil {
+		return nil, fmt.Errorf("error: Failed to parse lock info from DynamoDB for LockID '%s': %w", lockID, err)
+	}
+
+	// Ensure the retrieved lock matches the requested LockID
+	if lockInfo.ID != lockID {
+		return nil, fmt.Errorf("error: LockID mismatch. Expected '%s', found '%s'. "+
+			"Ensure you are unlocking the correct state file.", lockID, lockInfo.ID)
+	}
+
+	return &lockInfo, nil
 }
 
 // store the hash of the state so that clients can check for stale state files.
