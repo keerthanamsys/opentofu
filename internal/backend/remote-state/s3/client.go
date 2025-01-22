@@ -361,6 +361,14 @@ func (c *RemoteClient) getMD5(ctx context.Context) ([]byte, error) {
 	return sum, nil
 }
 
+func NewS3BackendClient(s3Client *s3.Client, dynamoDBClient *dynamodb.Client, lockTable string) *S3BackendClient {
+	return &S3BackendClient{
+		s3Client:       s3Client,
+		dynamoDBClient: dynamoDBClient,
+		lockTable:      &lockTable,
+	}
+}
+
 // GetLockInfo retrieves the lock information from DynamoDB
 func (c *S3BackendClient) GetLockInfo(ctx context.Context, lockID string) (*LockInfo, error) {
 	input := &dynamodb.GetItemInput{
