@@ -37,6 +37,12 @@ type LockInfo struct {
 	Info string `json:"Info"`
 }
 
+// S3BackendClient represents an S3-backed remote state backend client
+type S3BackendClient struct {
+	s3Client       *s3.Client
+	dynamoDBClient *dynamodb.Client
+	lockTable      *string
+}
 
 // Store the last saved serial in dynamo with this suffix for consistency checks.
 const (
