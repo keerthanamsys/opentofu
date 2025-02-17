@@ -89,6 +89,21 @@ func (p *Parser) LoadHCLFile(path string) (hcl.Body, hcl.Diagnostics) {
 	return file.Body, diags
 }
 
+// Convert keys to strings if needed.
+func convertToStringIfNeeded(key interface{}) string {
+	switch v := key.(type) {
+	case bool:
+		return fmt.Sprintf("%t", v) // Convert true/false to "true"/"false"
+	case int, float64:
+		return fmt.Sprintf("%v", v) // Convert numbers to strings
+	case string:
+		return v // Already a string
+	default:
+		panic(fmt.Sprintf("Unsupported key type: %T", v))
+	}
+}
+
+
 // Sources returns a map of the cached source buffers for all files that
 // have been loaded through this parser, with source filenames (as requested
 // when each file was opened) as the keys.
