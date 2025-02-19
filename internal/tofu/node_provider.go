@@ -54,11 +54,9 @@ func (n *NodeApplyableProvider) initInstances(ctx EvalContext, op walkOperation)
 	} else {
 		// Instances are set AND we are not validating
 		for key := range n.Config.Instances {
-			// Convert boolean and number keys to strings before using them
-			if key.Type().Equals(cty.Bool) {
-				key = cty.StringVal(fmt.Sprintf("%t", key.True())) // Convert true → "true", false → "false"
-			} else if key.Type().Equals(cty.Number) {
-				 key = cty.StringVal(fmt.Sprintf("%v", key.AsBigFloat())) // Convert number to string
+			keyStr := key.String()
+			if keyStr == "true" || keyStr == "false" {
+				 key = addrs.InstanceKeyFromString(keyStr) // ✅ Convert boolean-like strings
 			}	
 			initKeys = append(initKeys, key)
 			instanceKeys[key] = key
@@ -92,11 +90,9 @@ func (n *NodeApplyableProvider) executeInstance(ctx EvalContext, op walkOperatio
 		return n.ValidateProvider(ctx, providerKey, provider)
 	case walkPlan, walkPlanDestroy, walkApply, walkDestroy:
 		log.Printf("[TRACE] NodeApplyableProvider: configuring %s", n.Addr)
-		// Convert boolean/number provider keys to strings
-		if providerKey.Type().Equals(cty.Bool) {
-			providerKey = cty.StringVal(fmt.Sprintf("%t", providerKey.True()))
-		} else if providerKey.Type().Equals(cty.Number) {
-			 providerKey = cty.StringVal(fmt.Sprintf("%v", providerKey.AsBigFloat()))
+		providerKeyStr := providerKey.String()
+		if providerKeyStr == "true" || providerKeyStr == "false" {
+			 providerKey = addrs.InstanceKeyFromString(providerKeyStr) // ✅ Ensure boolean-like keys are handled
 		}	
 		return n.ConfigureProvider(ctx, providerKey, provider, false)
 	case walkImport:
