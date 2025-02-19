@@ -189,11 +189,11 @@ func (p *Provider) decodeStaticFields(eval *StaticEvaluator) hcl.Diagnostics {
 		for k, v := range forVal {
 			// Convert boolean keys to strings
 			var keyStr string
-			switch v := k.(type) {
-			case bool:
-				keyStr = fmt.Sprintf("%t", v)
-			default:
-				keyStr = fmt.Sprintf("%v", v)
+			if boolKey, ok := k.(bool); ok {
+				 keyStr = fmt.Sprintf("%t", boolKey)
+			} else {
+				keyStr = fmt.Sprintf("%v", k) 
+			
 			}
 			p.Instances[addrs.StringKey(keyStr)] = instances.RepetitionData{
 				EachKey:   cty.StringVal(keyStr),
