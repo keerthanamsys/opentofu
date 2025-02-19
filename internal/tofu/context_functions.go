@@ -19,7 +19,15 @@ import (
 
 // This builds a provider function using an EvalContext and some additional information
 // This is split out of BuiltinEvalContext for testing
+
 func evalContextProviderFunction(provider providers.Interface, op walkOperation, pf addrs.ProviderFunction, rng tfdiags.SourceRange) (*function.Function, tfdiags.Diagnostics) {
+	// Ensure the provider function key is always a string
+	if pf.Function.Type().Equals(cty.Bool) {
+		pf.Function = cty.StringVal(fmt.Sprintf("%t", pf.Function.True())) // Convert true → "true", false → "false"
+	} else if pf.Function.Type().Equals(cty.Number) {
+		 pf.Function = cty.StringVal(fmt.Sprintf("%v", pf.Function.AsBigFloat())) // Convert number to string
+	}
+	
 	var diags tfdiags.Diagnostics
 
 	// First try to look up the function from provider schema
@@ -79,6 +87,13 @@ func evalContextProviderFunction(provider providers.Interface, op walkOperation,
 // This will use the instance factory to get a provider to support the
 // function call.
 func providerFunction(name string, spec providers.FunctionSpec, provider providers.Interface) function.Function {
+	// Ensure provider function names are strings
+	if name.Type().Equals(cty.Bool) {
+		 name = fmt.Sprintf("%t", name.True()) // Convert true → "true", false → "false"
+        } else if name.Type().Equals(cty.Number) {
+		 name = fmt.Sprintf("%v", name.AsBigFloat()) // Convert number to string
+	}
+	
 	params := make([]function.Parameter, len(spec.Parameters))
 	for i, param := range spec.Parameters {
 		params[i] = providerFunctionParameter(param)
@@ -116,6 +131,13 @@ func providerFunction(name string, spec providers.FunctionSpec, provider provide
 
 // Simple mapping of function parameter spec to function parameter
 func providerFunctionParameter(spec providers.FunctionParameterSpec) function.Parameter {
+	// Ensure provider parameter names are always strings
+	if spec.Type.Equals(cty.Bool) {
+		spec.Type = cty.String // Convert boolean parameters to string
+	} else if spec.Type.Equals(cty.Number) {
+		  spec.Type = cty.String // Convert numeric parameters to string
+	}
+	
 	return function.Parameter{
 		Name:         spec.Name,
 		Description:  spec.Description,
