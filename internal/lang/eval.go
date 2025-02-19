@@ -25,6 +25,20 @@ import (
 	"github.com/opentofu/opentofu/internal/tfdiags"
 )
 
+func EvalProviderAliasKey(value cty.Value) string {
+    switch {
+    case value.Type().Equals(cty.Bool):
+        return fmt.Sprintf("%t", value.True()) // Convert bool to string ("true" / "false")
+    case value.Type().Equals(cty.Number):
+        return fmt.Sprintf("%v", value.AsBigFloat()) // Convert number to string
+    case value.Type().Equals(cty.String):
+        return value.AsString() // Already a string
+    default:
+        panic(fmt.Sprintf("Invalid provider alias key type: %v", value.Type()))
+    }
+}
+
+
 // ExpandBlock expands any "dynamic" blocks present in the given body. The
 // result is a body with those blocks expanded, ready to be evaluated with
 // EvalBlock.
