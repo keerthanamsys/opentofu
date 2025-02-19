@@ -187,14 +187,8 @@ func (p *Provider) decodeStaticFields(eval *StaticEvaluator) hcl.Diagnostics {
 
 		p.Instances = make(map[addrs.InstanceKey]instances.RepetitionData)
 		for k, v := range forVal {
-			// Convert boolean keys to strings
-			var keyStr string
-			if boolKey, ok := k.(bool); ok {
-				 keyStr = fmt.Sprintf("%t", boolKey)
-			} else {
-				keyStr = fmt.Sprintf("%v", k) 
+			keyStr := fmt.Sprintf("%v", k) 
 			
-			}
 			p.Instances[addrs.StringKey(keyStr)] = instances.RepetitionData{
 				EachKey:   cty.StringVal(keyStr),
 				EachValue: v,
