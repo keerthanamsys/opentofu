@@ -56,7 +56,7 @@ func (n *NodeApplyableProvider) initInstances(ctx EvalContext, op walkOperation)
 		for key := range n.Config.Instances {
 			keyStr := key.String()
 			if keyStr == "true" || keyStr == "false" {
-				 key = addrs.NewInstanceKey(keyStr) // Convert boolean-like strings
+				 key = addrs.StringKey(keyStr) // Convert boolean-like strings
 			}	
 			initKeys = append(initKeys, key)
 			instanceKeys[key] = key
@@ -92,7 +92,7 @@ func (n *NodeApplyableProvider) executeInstance(ctx EvalContext, op walkOperatio
 		log.Printf("[TRACE] NodeApplyableProvider: configuring %s", n.Addr)
 		providerKeyStr := providerKey.String()
 		if providerKeyStr == "true" || providerKeyStr == "false" {
-			 providerKey = addrs.NewInstanceKey(providerKeyStr) // Ensure boolean-like keys are handled
+			 providerKey = addrs.StringKey(providerKeyStr) // Ensure boolean-like keys are handled
 		}	
 		return n.ConfigureProvider(ctx, providerKey, provider, false)
 	case walkImport:
