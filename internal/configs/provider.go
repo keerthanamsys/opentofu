@@ -179,7 +179,7 @@ func (p *Provider) decodeStaticFields(eval *StaticEvaluator) hcl.Diagnostics {
 			return evalContext, diags.Append(evalDiags)
 		}
 
-		forVal, evalDiags := evalchecks.EvaluateForEachExpression(p.ForEach, forEachRefsFunc, addrs.AbsModuleInstance{})
+		forVal, evalDiags := evalchecks.EvaluateForEachExpression(p.ForEach, forEachRefsFunc, addrs.RootModuleInstance)
 		diags = append(diags, evalDiags.ToHCL()...)
 		if evalDiags.HasErrors() {
 			return diags
@@ -191,11 +191,11 @@ func (p *Provider) decodeStaticFields(eval *StaticEvaluator) hcl.Diagnostics {
 			var keyStr string
 			switch k := k.(type) {
 			case bool:
-				keyStr = fmt.Sprintf("%t", k)
+				keyStr = fmt.Sprintf("%t", key)
 			case string:
 				 keyStr = key
 			default:
-				keyStr = fmt.Sprintf("%v", k)
+				keyStr = fmt.Sprintf("%v", key)
 			}
 			p.Instances[addrs.StringKey(keyStr)] = instances.RepetitionData{
 				EachKey:   cty.StringVal(keyStr),
