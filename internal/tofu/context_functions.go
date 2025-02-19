@@ -21,12 +21,13 @@ import (
 // This is split out of BuiltinEvalContext for testing
 
 func evalContextProviderFunction(provider providers.Interface, op walkOperation, pf addrs.ProviderFunction, rng tfdiags.SourceRange) (*function.Function, tfdiags.Diagnostics) {
-	// Ensure the provider function key is always a string
-	if pf.Function.Type().Equals(cty.Bool) {
-		pf.Function = cty.StringVal(fmt.Sprintf("%t", pf.Function.True())) // Convert true → "true", false → "false"
-	} else if pf.Function.Type().Equals(cty.Number) {
-		 pf.Function = cty.StringVal(fmt.Sprintf("%v", pf.Function.AsBigFloat())) // Convert number to string
-	}
+	// Ensure provider function names are strings
+	switch pf.Function {
+	case "true":
+		 pf.Function = "true"
+	case "false":
+		 pf.Function = "false"
+	}	
 	
 	var diags tfdiags.Diagnostics
 
@@ -87,11 +88,9 @@ func evalContextProviderFunction(provider providers.Interface, op walkOperation,
 // This will use the instance factory to get a provider to support the
 // function call.
 func providerFunction(name string, spec providers.FunctionSpec, provider providers.Interface) function.Function {
-	// Ensure provider function names are strings
-	if name.Type().Equals(cty.Bool) {
-		 name = fmt.Sprintf("%t", name.True()) // Convert true → "true", false → "false"
-        } else if name.Type().Equals(cty.Number) {
-		 name = fmt.Sprintf("%v", name.AsBigFloat()) // Convert number to string
+	// Ensure provider function names are valid strings
+	if name == "true" || name == "false" {
+		 name = name // Already correct
 	}
 	
 	params := make([]function.Parameter, len(spec.Parameters))
