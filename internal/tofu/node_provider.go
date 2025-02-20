@@ -58,8 +58,8 @@ func (n *NodeApplyableProvider) initInstances(ctx EvalContext, op walkOperation)
 			keyStr := key.String()
 			if keyStr == "true" || keyStr == "false" {
 				 key = addrs.StringKey(keyStr) // Convert boolean-like strings
-			 } else if _, err := strconv.Atoi(keyStr); err == nil {
-				 key = addrs.IntKey(strconv.Atoi(keyStr)) // Convert integer strings
+			 } else if intVal, err := strconv.Atoi(keyStr); err == nil {
+				 key = addrs.IntKey(intVal)
 			  }	
 				
 			initKeys = append(initKeys, key)
