@@ -119,7 +119,7 @@ func resolveProviderInstance(keyExpr hcl.Expression, keyScope *lang.Scope, sourc
 		return nil, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid provider instance key",
-			Detail:   fmt.Sprintf("The given instance key is unsuitable: %s.", tfdiags.FormatError(parsedErr)),
+			Detail:   fmt.Sprintf("The given instance key is notsuitable: %s.", tfdiags.FormatError(parsedErr)),
 			Subject:  keyExpr.Range().Ptr(),
 		})
 	}
