@@ -60,7 +60,7 @@ func (n *NodeApplyableProvider) initInstances(ctx EvalContext, op walkOperation)
 			 } else if _, err := strconv.Atoi(keyStr); err == nil {
 				 key = addrs.IntKey(strconv.Atoi(keyStr)) // Convert integer strings
 			  }	
-			}	
+				
 			initKeys = append(initKeys, key)
 			instanceKeys[key] = key
 		}
